@@ -1,0 +1,59 @@
+CREATE TABLE borrower_t7 (
+    roll_no INT,
+    name VARCHAR(20),
+    date_of_i DATE,
+    name_of_book VARCHAR(20),
+    status VARCHAR(10)
+);
+
+CREATE TABLE fine_t7 (
+    roll_no INT,
+    date_of_r DATE,
+    amt INT
+);
+
+INSERT INTO borrower_t7 VALUES (1, 'harsh', TO_DATE('2017-05-26', 'YYYY-MM-DD'), 'harry potter', 'i');
+INSERT INTO borrower_t7 VALUES (2, 'sandesh', TO_DATE('2017-06-15', 'YYYY-MM-DD'), 'iceage', 'r');
+INSERT INTO borrower_t7 VALUES (3, 'Rahul', TO_DATE('2017-07-25', 'YYYY-MM-DD'), 'pokemon', 'i');
+INSERT INTO borrower_t7 VALUES (4, 'sarvesh', TO_DATE('2017-04-20', 'YYYY-MM-DD'), 'duel', 'r');
+INSERT INTO borrower_t7 VALUES (5, 'ishwari', TO_DATE('2017-05-22', 'YYYY-MM-DD'), 'hindikatha', 'i');
+
+SELECT * FROM borrower_t7;
+
+DECLARE  
+  roll INT := 1; 
+  b_name VARCHAR(20) := 'harry potter'; 
+  mdays INT := 0;
+  ndays DATE;
+  fine_amt INT := 0;
+BEGIN
+  SELECT date_of_i INTO ndays 
+  FROM borrower_t7 
+  WHERE roll_no = roll 
+    AND name_of_book = b_name;
+  mdays := SYSDATE - ndays;
+  IF mdays >= 15 AND mdays < 30 THEN
+    fine_amt := (mdays - 15) * 5;
+  ELSIF mdays >= 30 THEN
+    fine_amt := 15 * 5 + (mdays - 30) * 50;
+  END IF;
+
+  UPDATE borrower_t7 
+  SET status = 'r' 
+  WHERE roll_no = roll 
+    AND name_of_book = b_name;
+  IF fine_amt > 0 THEN
+    INSERT INTO fine_t7 
+    VALUES (roll, SYSDATE, fine_amt);
+  END IF;
+
+EXCEPTION
+  WHEN NO_DATA_FOUND THEN
+    DBMS_OUTPUT.PUT_LINE('No data found');
+  WHEN OTHERS THEN
+    DBMS_OUTPUT.PUT_LINE('Exception occurred');
+END;
+/
+
+SELECT * FROM fine_t7;
+SELECT * FROM borrower_t7;

@@ -1,0 +1,164 @@
+-- Create Database
+CREATE DATABASE university;
+
+-- Use Database
+USE university;
+
+-- Create Department Table
+CREATE TABLE department (
+    dept_no INT(3),
+    dept_name VARCHAR(20),
+    building_name VARCHAR(20)
+);
+
+-- Modify Department Table to Make building_name Unique
+ALTER TABLE department MODIFY building_name VARCHAR(20) UNIQUE;
+
+-- Insert Data into Department Table
+INSERT INTO department (dept_no, dept_name, building_name) 
+VALUES (1, 'Comp', 'A'), (2, 'IT', 'B'), (3, 'ENTC', 'C'), (4, 'Mech', 'D'), (5, 'AI', 'E');
+
+-- Modify Department Table to Make dept_no Primary Key
+ALTER TABLE department MODIFY dept_no INT(10) PRIMARY KEY;
+
+-- Create Instructor Table
+CREATE TABLE instructor (
+    inst_id INT(10) PRIMARY KEY,
+    inst_name VARCHAR(20),
+    dept_no INT(3),
+    salary INT(10),
+    mob_no INT(10)
+);
+
+-- Alter Instructor Table to Set inst_name as NOT NULL
+ALTER TABLE instructor MODIFY inst_name VARCHAR(20) NOT NULL;
+
+-- Add Foreign Key to Instructor Table
+ALTER TABLE instructor ADD FOREIGN KEY (dept_no) REFERENCES department (dept_no);
+
+-- Insert Data into Instructor Table
+INSERT INTO instructor (inst_id, inst_name, dept_no, salary, mob_no) 
+VALUES (101, 'Supriya', 1, 50000, 986324576), (102, 'Abhijeet', 2, 20000, 789265480), 
+       (103, 'Priya', 3, 25000, 862534972), (104, 'Suraj', 4, 15500, 893049201);
+
+-- Create Course Table
+CREATE TABLE course (
+    c_id INT(10) PRIMARY KEY,
+    title VARCHAR(20),
+    depart_no INT(10),
+    credits INT(10)
+);
+
+-- Insert Data into Course Table
+INSERT INTO course (c_id, title, depart_no, credits) 
+VALUES (1001, 'SPOS', 1, 20), (1002, 'TOC', 2, 22), (1003, 'DBMS', 3, 21), (1004, 'M1', 4, 22);
+
+-- Create Teacher Table
+CREATE TABLE teacher (
+    t_id INT(10) PRIMARY KEY,
+    sem INT(2),
+    year INT(4),
+    c_id INT(10)
+);
+
+-- Insert Data into Teacher Table
+INSERT INTO teacher (t_id, sem, year, c_id) 
+VALUES (201, 2, 1, 1001), (202, 4, 2, 1002), (203, 5, 3, 1003), (204, 7, 4, 1004);
+
+-- Add Unique Index on Instructor mob_no
+CREATE UNIQUE INDEX instructor_index ON instructor (mob_no);
+
+-- Create View for Instructor
+CREATE VIEW views AS SELECT inst_id, inst_name, dept_no, mob_no FROM instructor;
+
+-- Insert and Update Data in the View
+INSERT INTO views VALUES (105, 'Smita', 5, 786250340);
+UPDATE views SET dept_no = 4 WHERE inst_id = 101;
+DELETE FROM views WHERE inst_id = 105;
+
+-- Add subject Column to Teacher Table
+ALTER TABLE teacher ADD subject VARCHAR(20);
+
+-- Create and Drop a View for Teacher Subject
+CREATE VIEW new AS SELECT subject FROM teacher;
+DROP VIEW new;
+
+-- Drop budget Column from Department Table
+ALTER TABLE department DROP budget;
+
+-- Modify Course Title Column Length
+ALTER TABLE course MODIFY title VARCHAR(30);
+
+-- Drop Index from Instructor Table
+ALTER TABLE instructor DROP INDEX instructor_index;
+
+-- Rename table course to topic
+ALTER TABLE course RENAME TO topic;
+
+-- Show tables
+SHOW TABLES;
+
+-- Create a view named teaches
+CREATE VIEW teaches AS SELECT c_id, title FROM topic;
+
+-- Select data from the teaches view
+SELECT * FROM teaches;
+
+-- Drop the primary key from department table
+ALTER TABLE department DROP PRIMARY KEY;
+
+-- Describe the department table structure
+DESC department;
+
+-- Create a Student table with auto_increment primary key
+CREATE TABLE student (
+    id INT NOT NULL AUTO_INCREMENT,
+    last_name VARCHAR(25) NOT NULL,
+    first_name VARCHAR(20),
+    age INT(2),
+    PRIMARY KEY (id)
+);
+
+-- Describe the student table structure
+DESC student;
+
+-- Insert data into student table
+INSERT INTO student (id, last_name, first_name, age) 
+VALUES 
+    (1, 'wagh', 'shruti', 21),
+    (2, 'patil', 'aditi', 22),
+    (3, 'jadhav', 'vidya', 21),
+    (4, 'jagtap', 'priti', 22);
+
+-- Select data from student table
+SELECT * FROM student;
+
+-- Set auto_increment value of student table to 51
+ALTER TABLE student AUTO_INCREMENT = 51;
+
+-- Insert another record into student without specifying id
+INSERT INTO student (last_name, first_name) VALUES ('gaikwad', 'smita');
+
+-- Show databases
+SHOW DATABASES;
+
+-- Show tables in university database
+SHOW TABLES;
+
+-- Select data from student table
+SELECT * FROM student;
+
+-- Truncate the student table
+TRUNCATE TABLE student;
+
+-- Select data from student table to verify truncation
+SELECT * FROM student;
+
+-- Select data from teacher table
+SELECT * FROM teacher;
+
+-- Drop the teacher table
+DROP TABLE teacher;
+
+-- Attempt to select data from teacher table (will result in an error if successful)
+SELECT * FROM teacher;

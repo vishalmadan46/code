@@ -1,0 +1,100 @@
+print("I. Insert a couple of documents\n");
+db.Articles.insertMany([
+  {
+    Title: "MongoDB Basics",
+    Content: "MongoDB is a NoSQL database.",
+    Author: "John Doe",
+    Author_age: 30,
+    DOP: new Date("2024-01-15"),
+    Category: "Database",
+    Comment: [
+      { Name: "Alice", Remarks: "Great introduction!" },
+      { Name: "Bob", Remarks: "Very informative." }
+    ]
+  },
+  {
+    Title: "Advanced MongoDB",
+    Content: "MongoDB for experienced developers.",
+    Author: "Sharma",
+    Author_age: 29,
+    DOP: new Date("2024-02-20"),
+    Category: "Database",
+    Comment: [
+      { Name: "Charlie", Remarks: "Insightful!" },
+      { Name: "David", Remarks: "Very useful." }
+    ]
+  }
+]);
+
+print("\nII. Display the first document found in the collection");
+printjson(db.Articles.findOne());
+
+print("\nIII. Display the first document belonging to a certain Author 'Sharma'");
+let authorDocument = db.Articles.findOne({ Author: "Sharma" });
+if (authorDocument) {
+  printjson(authorDocument);
+} else {
+  print("No documents found for author 'Sharma'.");
+}
+
+print("\nIV. Modify the comment made by a certain person on a certain article");
+db.Articles.updateOne(
+  { Title: "MongoDB Basics", "Comment.Name": "Alice" },
+  { $set: { "Comment.$.Remarks": "Excellent introduction!" } }
+);
+
+print("\nV. Insert a record using save method with ObjectId");
+let x=new ObjectId();
+let newArticleWithId = {
+  _id:x;
+  Title: "Effective MongoDB Usage",
+  Content: "A guide on using MongoDB effectively.",
+  Author: "Jane Smith",
+  Author_age: 27,
+  DOP: new Date("2024-03-10"),
+  Category: "Database",
+  Comment: []
+};
+db.Articles.save(newArticleWithId);
+
+print("\nVI. Insert record using save method without ObjectId");
+let newArticleWithoutId = {
+  Title: "MongoDB Performance",
+  Content: "Improving MongoDB performance.",
+  Author: "Michael Brown",
+  Author_age: 35,
+  DOP: new Date("2024-03-15"),
+  Category: "Database",
+  Comment: []
+};
+db.Articles.save(newArticleWithoutId);
+
+print("\n Update using save method");
+newArticleWithId = {
+  _id: x,
+  Content: "New BOOK",
+  Author: "Jane Smith",
+  Author_age: 27,
+  DOP: new Date("2024-03-10"),
+  Category: "Database",
+  Comment: []
+};
+db.Articles.save(newArticleWithId);
+
+print("\nVII. Add one more comment for a particular title");
+db.Articles.updateOne(
+  { Title: "MongoDB Basics" },
+  { $push: { Comment: { Name: "Eve", Remarks: "This was very helpful." } } }
+);
+
+print("\nVIII. Delete the documents whose author age is less than 18");
+let deleteResult = db.Articles.deleteMany({ Author_age: { $lt: 18 } });
+printjson(deleteResult);
+
+print("\nIX. Remove All Documents from a Collection");
+let removeAllResult = db.Articles.deleteMany({});
+printjson(removeAllResult);
+
+print("\nX. Delete the article collection");
+db.Articles.drop();
+print("Articles collection deleted.");

@@ -1,0 +1,68 @@
+CREATE TABLE stud_Marks (
+stud_name VARCHAR(30),
+total_marks INT
+);
+
+CREATE TABLE Result (
+roll_no INT,
+stud_name VARCHAR(30),
+class VARCHAR(30)
+);
+
+DELIMITER //
+
+CREATE PROCEDURE proc_Grade(IN roll_no INT, IN stud_name VARCHAR(30), IN total_marks INT)
+BEGIN
+DECLARE class VARCHAR(30);
+
+IF total_marks <= 1500 AND total_marks >= 990 THEN
+SET class = 'Distinction';
+ELSEIF total_marks <= 989 AND total_marks >= 900 THEN
+SET class = '1st Class';
+ELSEIF total_marks <= 899 AND total_marks >= 825 THEN
+SET class = 'Higher 2nd';
+ELSE
+SET class = 'Fail';
+END IF;
+
+INSERT INTO stud_Marks VALUES (stud_name, total_marks);
+INSERT INTO Result VALUES (roll_no, stud_name, class);
+END;
+//
+
+DELIMITER ;
+
+CALL proc_Grade(1, 'Alice', 1020);
+CALL proc_Grade(2, 'Bob', 870);
+CALL proc_Grade(3, 'Charlie', 1500);
+CALL proc_Grade(4, 'David', 750);
+CALL proc_Grade(5, 'Eve', 920);
+CALL proc_Grade(6, 'Frank', 800);
+CALL proc_Grade(7, 'Grace', 950);
+CALL proc_Grade(8, 'Hannah', 600);
+
+SELECT * FROM stud_Marks;
+
+SELECT * FROM Result;
+
+DELIMITER //
+
+CREATE FUNCTION get_total_students(class_name VARCHAR(30))
+RETURNS INT
+DETERMINISTIC
+READS SQL DATA
+BEGIN
+    DECLARE total_students INT;
+
+    SELECT COUNT(*)
+    INTO total_students
+    FROM Result
+    WHERE class = class_name;
+
+    RETURN total_students;
+END;
+//
+
+DELIMITER ;
+
+SELECT get_total_students('Distinction');

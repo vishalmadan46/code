@@ -1,0 +1,138 @@
+sudo mysql -u root -p;
+create database userDB;
+use userDB;
+create table user(
+id int primary key,
+name varchar(30),
+ age int,
+city varchar(20));
+create user 'skncoe'@'localhost' identified by 'Sak@2104';
+grant all privileges on *.* to 'skncoe'@'localhost';
+import mysql.connector
+from mysql.connector import Error
+
+# Function to establish a connection to the MySQL database
+def establish_database_connection():
+    try:
+        connection = mysql.connector.connect(
+            host='localhost',
+            user='skncoe',
+            password='Sak@2104',
+            database='userDB'
+        )
+        if connection.is_connected():
+            print("Connected to MySQL Database!")
+        return connection
+    except Error as e:
+        print(f"Error: {e}")
+        return None
+
+# Function to create a cursor object
+def create_cursor(connection):
+    return connection.cursor()
+
+# Function to add a record
+def add_user_record(cursor, connection):
+    try:
+        user_id = int(input("Enter ID: "))
+        name = input("Enter Name: ")
+        age = int(input("Enter Age: "))
+        city = input("Enter City: ")
+        query = "INSERT INTO user (id, name, age, city) VALUES (%s, %s, %s, %s)"
+        values = (user_id, name, age, city)
+        cursor.execute(query, values)
+        connection.commit()
+        print("Record added successfully!")
+    except Error as e:
+        print(f"Failed to add record: {e}")
+
+# Function to delete a record
+def delete_user_record(cursor, connection):
+    try:
+        user_id = int(input("Enter the ID of the record to delete: "))
+        query = "DELETE FROM user WHERE id = %s"
+        cursor.execute(query, (user_id,))
+        connection.commit()
+        if cursor.rowcount > 0:
+            print("Record deleted successfully!")
+        else:
+            print("No record found with that ID.")
+    except Error as e:
+        print(f"Failed to delete record: {e}")
+
+# Function to edit a record
+def edit_user_record(cursor, connection):
+    try:
+        user_id = int(input("Enter the ID of the record to edit: "))
+        new_name = input("Enter new name: ")
+        new_age = int(input("Enter new age: "))
+        new_city = input("Enter new city: ")
+        query = "UPDATE user SET name = %s, age = %s, city = %s WHERE id = %s"
+        values = (new_name, new_age, new_city, user_id)
+        cursor.execute(query, values)
+        connection.commit()
+        if cursor.rowcount > 0:
+            print("Record updated successfully!")
+        else:
+            print("No record found with that ID.")
+    except Error as e:
+        print(f"Failed to update record: {e}")
+
+# Function to fetch and display all records
+def fetch_user_records(cursor):
+    try:
+        query = "SELECT * FROM user"
+        cursor.execute(query)
+        results = cursor.fetchall()
+        if results:
+            print("ID\tName\tAge\tCity")
+            for row in results:
+                print(f"{row[0]}\t{row[1]}\t{row[2]}\t{row[3]}")
+        else:
+            print("No records found.")
+    except Error as e:
+        print(f"Failed to fetch records: {e}")
+
+# Function to display the menu
+def display_menu():
+    print("\n--- Menu ---")
+    print("1. Add Record")
+    print("2. Delete Record")
+    print("3. Edit Record")
+    print("4. View Records")
+    print("5. Exit")
+
+def main():
+    # Establish a connection to the database
+    connection = establish_database_connection()
+    if connection is None:
+        return
+
+    # Create a cursor object
+    cursor = create_cursor(connection)
+
+    while True:
+        display_menu()
+        choice = input("Enter your choice (1-5): ")
+
+        if choice == '1':
+            add_user_record(cursor, connection)
+        elif choice == '2':
+            delete_user_record(cursor, connection)
+        elif choice == '3':
+            edit_user_record(cursor, connection)
+        elif choice == '4':
+            fetch_user_records(cursor)
+        elif choice == '5':
+            print("Exiting program...")
+            break
+        else:
+            print("Invalid choice! Please try again.")
+
+    if connection.is_connected():
+        connection.close()
+        print("Disconnected from MySQL Database.")
+
+if __name__ == "__main__":
+    main()
+

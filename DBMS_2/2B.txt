@@ -1,0 +1,142 @@
+create table patient(
+pat_id varchar(10),
+pat_name varchar(30),
+date_adm date,
+age int,
+city varchar(20),
+primary key(pat_id)
+);
+
+
+create table doctors(
+doc_id varchar(10),
+doc_name varchar(30),
+qualification varchar(20),
+exp int,
+dept varchar(20),
+city varchar(20),
+salary int,
+primary key(doc_id)
+);
+
+
+create table treats(
+doc_id varchar(10),
+pat_id varchar(10),
+disease varchar(20),
+fees int,
+foreign key(doc_id) references doctors(doc_id) on delete cascade,
+foreign key(pat_id) references patient(pat_id) on delete set NULL
+);
+
+
+
+-- 1) Insert records in the patient table
+insert into patient values('p1','Malhar','2024-01-22',20,'Pune'),
+('p2','Saniya','2024-07-03',20,'Mumbai'),
+('p3','Shweta','2024-06-01',22,'Wai'),
+('p4','Rajat','2024-07-24',19,'Pune'),
+('p5','Ketan','2024-06-20',18,'Rajgurunagar'),
+('p10','Amaya','2024-06-22',17,'Solapur'),
+('p7','Inaya','2024-07-23',22,'Hyderabad');
+
+-- 2) Insert records in the doctors table
+insert into doctors values('d1','Agrawal','MD',15,'Cardiologist','Pune',100000),
+('d2','Mayuri','MD',10,'Cardiologist','Pune',95000),
+('d3','Suhas','MD',20,'Cardiologist','Pune',150000),
+('d4','Shinde','MD',30,'Cardiologist','Pune',200000),
+('d5','Jay','BDS',10,'Dentist','Pune',50000),
+('d6','Shreya','BDS',8,'Dentist','Pune',70000),
+('d7','Sejal','BDS',10,'Dentist','Pune',60000),
+('d8','Sharwari','BDS',10,'Dentist','Pune',55000),
+('d9','Waghmare','MBBS',10,'Homeopathy','Pune',200000),
+('d10','Shubham','MBBS',15,'Homeopathy','Pune',250000),
+('d11','Gayatri','MBBS',25,'Homeopathy','Pune',150000),
+('d12','Mhetre','MBBS',35,'Homeopathy','Pune',350000);
+
+-- 3) Insert records in the treats table
+insert into treats values('d1','p2','stroke',2500),
+('d6','p1','teeth alignment',3000),
+('d1','p5','cancer',10000),
+('d9','p1','fever',1000),
+('d10','p5','dengue',5000);
+
+-- 2) Display patients between the ages of 18 and 50
+select pat_name from patient where age BETWEEN 18 and 50;
+
+-- 3) Display doctors with the qualification 'MD'
+select * from doctors where qualification = 'MD';
+
+-- 4) Display doctors with more than 20 years of experience
+select * from doctors where exp > 20;
+
+-- 5) Display patients suffering from cancer
+select * from patient, treats where patient.pat_id = treats.pat_id and disease = 'cancer';
+
+-- 6) Display patient and doctor names for cancer treatment
+select pat_name, doc_name, disease from patient, doctors, treats 
+where patient.pat_id = treats.pat_id and doctors.doc_id = treats.doc_id and disease = 'cancer';
+
+-- 7) Display patient names starting with 'a' and ending with 'a' with exactly five letters
+select pat_name from patient where pat_name LIKE 'a%a' AND LENGTH(pat_name) = 5;
+
+-- 8) Delete records of patient with pat_id = 'p10'
+delete from patient where pat_id = 'p10';
+
+-- 9) Delete records of doctor 'Suhas'
+delete from doctors where doc_name = 'Suhas';
+
+-- 10) Update qualification of doctor 'Shubham' from MBBS to MD
+update doctors set qualification = 'MD' where doc_name = 'Shubham';
+
+-- 11) Increase salary by 5% for Dentists and 10% for Cardiologists
+update doctors
+set salary = case
+when dept = 'Dentist' then salary*1.05
+when dept = 'Cardiologist' then salary + 0.1 * salary
+else salary
+end;
+
+-- 12) Sum of salaries by department(departmentwise total salary).
+select sum(salary), dept from doctors group by dept;
+
+-- 13) Department with highest average salary
+select avg(salary), dept from doctors group by dept order by avg(salary) DESC limit 1;
+
+-- 14) Average salary for dentists
+select avg(salary), dept from doctors where dept = 'Dentist';
+
+-- 15) Departments with average salary > 50000
+select avg(salary), dept from doctors group by dept having avg(salary) > 50000;
+
+-- 16) find how many doctors work in the hospital
+select count(*) from doctors;
+
+-- 17) find how many doctors actually treated a patient.
+select count(distinct doc_id) from treats;
+
+-- 18) Unique cities from both patient and doctors(either)
+select city from patient UNION select city from doctors;
+
+-- 19) List the cities where both lives.List the doc_name ,pat_name and their cities name if they live in the same city .
+
+select distinct city from doctors where city IN (select city from patient);
+select doc_name ,pat_name, doctors.city from doctors,patient where doctors.city = patient.city;
+
+
+-- 20) Doctors not treating any patient
+select doc_name, doc_id from doctors where doc_id NOT IN (select doc_id from treats);
+
+-- 21) Combined list of patient and doctor names + if duplicates appear
+select pat_name from patient UNION select doc_name from doctors;
+select pat_name from patient UNION ALL select doc_name from doctors;
+
+-- 22) Sum of fees in treats table
+select sum(fees) from treats;
+
+-- 23) Average salary per department
+select avg(salary) from doctors group by dept;
+
+-- 24) Patients without a date of admission
+insert into patient(pat_id,pat_name,age,city) values('p8','Sanjotha',25,'Bangalore');
+select pat_name from patient where date_adm is NULL;

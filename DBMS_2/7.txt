@@ -1,0 +1,132 @@
+-- Create library table
+CREATE TABLE library (
+    b_id INT PRIMARY KEY,
+    title VARCHAR2(100),
+    edition INT,
+    no_of_copies INT
+);
+
+-- Create library_audit table
+CREATE TABLE library_audit (
+    b_id INT,
+    title VARCHAR2(100),
+    edition INT,
+    no_of_copies INT,
+    date_of_mod DATE,
+    type_of_oper VARCHAR2(10),
+    user_performed VARCHAR2(50)
+);
+
+-- Create transaction table with foreign key reference to library
+CREATE TABLE transaction (
+    trans_id INT PRIMARY KEY,
+    book_id INT,
+    s_id INT,
+    issue_or_return VARCHAR2(10),
+    no_of_copies_IorR INT,
+    date_IorR DATE,
+    CONSTRAINT fk_book_id FOREIGN KEY (book_id) REFERENCES library(b_id)
+);
+
+-- Insert sample data into library table
+INSERT INTO library (b_id, title, edition, no_of_copies)
+VALUES (1, 'Lord of rings', 1, 5);
+
+INSERT INTO library (b_id, title, edition, no_of_copies)
+VALUES (2, 'Chronicles of Narnia', 3, 2);
+
+INSERT INTO library (b_id, title, edition, no_of_copies)
+VALUES (3, 'Harry Potter', 2, 4);
+
+INSERT INTO library (b_id, title, edition, no_of_copies)
+VALUES (4, 'Journey to the west', 1, 6);
+
+-- Trigger 1: after_update_library - audit trail for updates in library table
+CREATE OR REPLACE TRIGGER after_update_library
+AFTER UPDATE ON library
+FOR EACH ROW
+BEGIN
+    IF :OLD.b_id IS NOT NULL THEN
+        INSERT INTO library_audit (b_id, title, edition, no_of_copies, date_of_mod, type_of_oper, user_performed)
+        VALUES (:OLD.b_id, :OLD.title, :OLD.edition, :OLD.no_of_copies, SYSDATE, 'update', USER);
+    END IF;
+END;
+/
+
+-- Trigger 2: after_delete_library - audit trail for deletes in library table
+CREATE OR REPLACE TRIGGER after_delete_library
+AFTER DELETE ON library
+FOR EACH ROW
+BEGIN
+    INSERT INTO library_audit (b_id, title, edition, no_of_copies, date_of_mod, type_of_oper, user_performed)
+    VALUES (:OLD.b_id, :OLD.title, :OLD.edition, :OLD.no_of_copies, SYSDATE, 'delete', USER);
+END;
+/
+
+-- Update and delete operations to test the triggers
+UPDATE library
+SET edition = 4
+WHERE b_id = 1;
+
+DELETE FROM library
+WHERE b_id = 2;
+
+-- Re-insert the deleted row for continued testing
+INSERT INTO library (b_id, title, edition, no_of_copies) 
+VALUES (2, 'Chronicles of Narnia', 3, 2);
+
+-- Check the library_audit table for results of the triggers
+SELECT * FROM library_audit;
+
+-- Trigger 3: before_insert_transaction - adjust no_of_copies_IorR before insert if exceeding available copies
+CREATE OR REPLACE TRIGGER before_insert_transaction 
+BEFORE INSERT ON transaction  
+FOR EACH ROW  
+DECLARE 
+    NOC INT; 
+BEGIN 
+    IF :NEW.issue_or_return = 'I' THEN 
+        SELECT no_of_copies  
+        INTO NOC 
+        FROM library  
+        WHERE b_id = :NEW.book_id; 
+         
+        IF :NEW.no_of_copies_IorR > NOC THEN 
+            :NEW.no_of_copies_IorR := NOC; 
+        END IF; 
+    END IF; 
+END;
+/
+
+-- Insert a transaction to test the trigger
+INSERT INTO transaction (trans_id, book_id, s_id, issue_or_return, no_of_copies_IorR, date_IorR) 
+VALUES (1, 2, 101, 'I', 4, SYSDATE);
+
+-- Truncate transaction table to clear data
+TRUNCATE TABLE transaction;
+
+-- Trigger 4: after_issue_or_return - adjust library no_of_copies after issue or return in transaction
+CREATE OR REPLACE TRIGGER after_issue_or_return 
+AFTER INSERT ON transaction 
+FOR EACH ROW 
+BEGIN 
+    IF :NEW.issue_or_return = 'I' THEN 
+        UPDATE library 
+        SET no_of_copies = no_of_copies - :NEW.no_of_copies_IorR 
+        WHERE b_id = :NEW.book_id; 
+    ELSIF :NEW.issue_or_return = 'R' THEN 
+        UPDATE library 
+        SET no_of_copies = no_of_copies + :NEW.no_of_copies_IorR 
+        WHERE b_id = :NEW.book_id; 
+    END IF; 
+END;
+/
+
+-- Test the after_issue_or_return trigger with an issue transaction
+INSERT INTO transaction (trans_id, book_id, s_id, issue_or_return, no_of_copies_IorR, date_IorR) 
+VALUES (1, 2, 101, 'I', 2, SYSDATE);
+
+-- Check the transaction table and library table to verify trigger functionality
+SELECT * FROM transaction;
+
+SELECT * FROM library;

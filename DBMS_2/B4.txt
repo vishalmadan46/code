@@ -1,0 +1,85 @@
+import pymongo
+from pymongo import MongoClient
+
+def connect_to_database():
+    client = MongoClient()
+    db = client['userDB']
+    print("Connected to the database.")
+    return db
+
+def insert_new_user(collection):
+    user_id = int(input("Input ID: "))
+    username = input("Input Name: ")
+    user_age = int(input("Input Age: "))
+    user_city = input("Input City: ")
+    user_data = {
+        "_id": user_id,
+        "name": username,
+        "age": user_age,
+        "city": user_city
+    }
+    collection.insert_one(user_data)
+    print("Data inserted successfully.")
+
+def remove_user_record(collection):
+    user_id = int(input("Provide the ID of the record to delete: "))
+    result = collection.delete_one({"_id": user_id})
+    if result.deleted_count > 0:
+        print("Data removed successfully.")
+    else:
+        print("No matching ID found.")
+
+def modify_user_record(collection):
+    user_id = int(input("Input the ID of the record to update: "))
+    updated_name = input("Input new name: ")
+    updated_age = int(input("Input new age: "))
+    updated_city = input("Input new city: ")
+    result = collection.update_one(
+        {"_id": user_id},
+        {"$set": {"name": updated_name, "age": updated_age, "city": updated_city}}
+    )
+    if result.modified_count > 0:
+        print("Data updated successfully.")
+    else:
+        print("No record found for the provided ID.")
+
+def get_all_user_records(collection):
+    all_results = list(collection.find())
+    if all_results:
+        print("ID\tName\tAge\tCity")
+        for record in all_results:
+            print(f"{record['_id']}\t{record['name']}\t{record['age']}\t{record['city']}")
+    else:
+        print("No records in the database.")
+
+def show_menu():
+    print("\n--- Menu ---")
+    print("1. Add New Record")
+    print("2. Remove Record")
+    print("3. Modify Record")
+    print("4. View All Records")
+    print("5. Exit")
+
+def run_program():
+    db = connect_to_database()
+    collection = db['user']
+
+    while True:
+        show_menu()
+        choice = input("Enter your option (1-5): ")
+
+        if choice == '1':
+            insert_new_user(collection)
+        elif choice == '2':
+            remove_user_record(collection)
+        elif choice == '3':
+            modify_user_record(collection)
+        elif choice == '4':
+            get_all_user_records(collection)
+        elif choice == '5':
+            print("Exiting the system...")
+            break
+        else:
+            print("Invalid input. Try again.")
+
+run_program()
